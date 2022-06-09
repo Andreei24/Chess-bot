@@ -1,0 +1,169 @@
+Nume echipa: Total Drama Queens
+
+Membrii echipa:
+-----------------------
+CRETU Andrei
+GOBEAJA Andrada-Oana
+PETRE-ANTICA Eduard-Dominic
+RAUCESCU Robert-Andrei
+
+Grupa: 325 CB
+
+							
+						README PROIECT PA 2021
+
+
+============= ETAPA 1 ===============
+
+Fisierul Makefile contine instructiuni pentru compilarea proiectului (crearea
+fisierelor .class), de rulare si de curatare (stergerea fisierelor .class)
+
+- Instructiune de compilare: make build
+- Instructiune de rulare: xboard -fcp "make run" -debug
+- Instructiune de curatare: make clean
+
+
+STRUCTURA PROIECT
+----------------------------
+
+- Project SDK: Java Version "15"
+
+- Proiectul are in structura lui fisierul README, fisierul Makefile si
+2 foldere: Pieces (care contine fisierele .java pentru toate tipurile de piese)
+si Proiect (care contine restul fisierelor .java, inclusiv Main)
+
+-> Main: citeste continuu de la xboard si, in functie de comanda
+data, initializeaza un nou joc, retine mutarile facute pe tabla, muta un pion,
+renunta la jocul curent, opreste bot-ul sau il forteaza sa joace din starea 
+curenta
+
+-> Game: - retine tabla de sah in cadrul jocului curent, precum si lista 
+		pieselor (pionilor) ramasi pe tabla in functie de culoare
+		- initializeGame() - reinitializam tabla de sah, culoarea bot-ului,
+		precum si lista pieselor disponibile
+		- chooseRandomPawn() - alege la intamplare un pion cu care bot-ul sa
+		joace
+		- interpretMove() - face schimbarile necesare pe tabla de joc in functie
+		de mutarea pe care o primeste
+
+-> Piece:	- supraclasa pentru celelalte clase de piese
+		 	- fiecare piesa va retine culoarea si pozitia pe care o are pe tabla
+
+-> Pawn: 	- subclasa a lui Piece
+			- fiecare pion va retine daca a fost mutat vreodata sau nu, pentru a 
+			verifica daca se poate muta cu 2 pozitii inainte
+			- movePawn() - muta pionul curent pe tabla de joc, alegand una din 
+			mutarile rezultate din apelarea functiei generateMoves()
+			- generateMoves() - creeaza toate mutarile pe care le poate face
+			pionul din pozitia lui curenta
+
+OBS: 
+1. In cazul in care pionul curent cu care joaca bot-ul este luat cand bot-ul 
+este activ, acesta va da "resign" la xboard
+2. In cazul in care pionul curent al bot-ului este luat cand acesta nu joaca,
+atunci cand va primi comanda de a continua el isi va alege la intamplare unul
+din pionii ramasi sa fie cel curent. Daca nu exista un pion pe care il poate
+alege, atunci va da "resign" la xboard
+
+RESPONSABILITATI MEMBRII ECHIPA
+--------------------------------
+CRETU Andrei -> comunicarea cu xboard, functiile de verificare a sahului dat la rege, mutarea nebunului si a reginei
+GOBEAJA Andrada-Oana -> comunicarea cu xboard, mutarea calului, crearea rocadelor
+PETRE-ANTICA Eduard-Dominic -> crearea claselor, crearea Makefile-ului, mutarea turei si a reginei
+RAUCESCU Robert-Andrei -> crearea claselor, coding style, mutarea pionului si a regelui
+
+
+SURSE DE INSPIRATIE
+-------------------------------
+https://codereview.stackexchange.com/questions/53875/generating-possible-chess-moves
+
+============= ETAPA 2 ===============
+
+    Atat structura, cat si modul de rulare al proiectului este identic ca in etapa 1
+
+-> Main() : - spre deosebire de prima, etapa, atunci cand botul primeste o mutare, acesta
+        cauta in toate piesele ramase sa gaseasca una cu mutari valabile
+
+OBS: Fiecare tip de piesa va avea implementata functia generateMoves() care ii
+va genera toate mutarile valide
+
+-> Piece :  - movePiece()   - muta piesa pe tabla jocului curent, actuali-
+                                zeaza campul "neverMoved" la pioni, regi si ture
+                                si trimite la xboard mutarea in sine
+
+            - filterMovesSoNoCheckOnKing ()
+                - pentru piesa data, elimina mutarile care ar lasa regele in sah
+                    cu orice piesa a adversarului (Obs: Acest caz nu include si
+                    caii sau pionii, intrucat daca regele nu era deja in sah, nu
+                    poate fi dupa mutare)
+
+                - isCollinear() - returneaza directia dintre rege si o piesa (linie,
+                coloana, diagonala)
+
+                - checkBetween() - verifica daca exista o piesa de aceeasi culoare
+                cu regele intre rege si o piesa
+
+                - isCheckAfterMove() - verifica daca regele s-ar afla in sah dupa
+                o mutare
+
+                - getBlockingPieces() - returneaza lista pieselor care ar putea
+                bloca atacul de catre o piesa adversara asupra regelui
+
+-> King:    - isCheck() - verifica daca regele este atacat de o piesa adversara
+                        si o returneaza in caz afirmativ
+
+-> Game:    - retinem 2 arrylist-uri de piese pentru alb (remWhitePieces) si pentru
+            negru (remBlackPieces) ce vor contine toate piesele ramase pe tabla
+            de joc
+
+            - getCrtPiece() - returneaza piesa ce urmeaza sa fie mutata (are un
+                                camp ce contine lista mutarilor valide)
+
+                    -> daca regele nu se afla in sah, verificam daca putem face
+                    rocada mica sau mare; in caz afirmativ, returnam regele
+                    doar cu aceasta miscare
+                            -> daca nu se poate face rocada, verificam daca
+                            se poate face "en passant" : in cazul in care ultima
+                            piesa mutata de bot este pion (sndLastPiece), iar
+                            ultima piesa mutata de adbersar este un pion ce
+                            indeplineste conditiile (lastPiece), atunci returnam
+                            pionul care face "en passant", doar cu aceasta miscare
+
+                            -> daca nu se poate face nici "en passant", se alege
+                            la intamplare una din piesele cu mutari valide si
+                            se returneaza aceasta cu lista de mutari
+
+                    -> daca regele se afla in sah, verificam daca acesta nu a intrat
+                    deja in sah de cel putin 3 ori
+
+                    -> daca nu a fost regele in sah de cel putin 3 ori si exista vreo
+                    piesa care poate manca piesa atacatoare,o returnam, avand
+                    ca miscari posibile doar cele care mananca piesa
+                        -> in cazul in care piesa nu poate fi mancata, incercam
+                        sa mutam regele din sah; daca are mutari care il scot din
+                        sah, returneaza regele doar cu miscarile care il salveaza
+                        -> daca regele nu poate iesi din sah, iar piesa atacatoare
+                        este pion sau cal, atunci nu se poate iesi din sah si se
+                        da "resign"
+                        -> daca piesa atacatoare este de orice alt tip, cautam o
+                        piesa care se poate pune intre rege si atacator; in cazul
+                        in care aceasta exista, o returnam doar cu miscarile care
+                        il salveaza pe rege de sah
+
+
+OBS: Pentru a putea testa mai usor miscarile speciale de "en passant" si rocadele,
+bot-ul va incerca mereu sa faca mai intai una din acestea in cazul in care regele
+nu este in sah, abia dupa aceea sa aleaga la intamplare o piesa daca nu se poate
+
+            - getKingsideCastling() & getQueensideCastling() - verifica daca regele
+            poate face rocada mica, respectiv rocada mare
+
+            - interpretNotBotMove() - interpretam o miscare primita de la adversar
+            si actualizam (daca trebuie) campurile piesei mutate
+
+            - interpretBotMove() - interpretam o miscare primita de la bot
+
+
+OBS: Atat interpretBotMove(), cat si interpretNotBotMove() verifica cazurile speciale
+de mutari ("en passant", rocada mica si rocada mare, promovare de pion) si actualizeaza
+numarul de sahuri la ambii regi.
